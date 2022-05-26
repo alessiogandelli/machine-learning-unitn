@@ -207,7 +207,7 @@ class Dataset(object):
         image = tf.image.resize(image, self.target_shape)
         return image
 
-
+#cosine similarity tensorflow
 
 def compute_features(ds, embedding):
     features = []
@@ -226,14 +226,17 @@ def compute_features(ds, embedding):
 
     return features, paths, labs
 
-def compute_results(query_features, gallery_features, query_urls, gallery_urls ):
+def compute_results(query_features, gallery_features, query_urls, gallery_urls, dist = 'eucledian' ):
   results = dict()
   print(len(query_features))
   for i, query_sample in enumerate(query_features):
 
       query_sample = tf.reshape(query_sample, [1, len(query_sample)])
       query_sample_tiles = tf.tile(query_sample, [len(gallery_features), 1])
-      dists = tf.math.sqrt(tf.reduce_sum(tf.math.square(query_sample_tiles - gallery_features), axis=-1))
+      if dist == 'eucledian':
+        dists = tf.math.sqrt(tf.reduce_sum(tf.math.square(query_sample_tiles - gallery_features), axis=-1))
+      elif dist == 'cosine':
+        dists = tf.reduce_sum(query_sample_tiles * gallery_features, axis=-1)
       rank = tf.argsort( dists, axis=-1, direction='ASCENDING', stable=False, name=None)
       gallery_list = []
       for idx in rank[:10]:
