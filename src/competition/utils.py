@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from tensorflow.keras.preprocessing import image
 import tensorflow as tf
 import os
@@ -34,6 +33,8 @@ class DataGenerator(tf.keras.utils.Sequence):
         #class list
         self.data_classes = [directory for directory in os.listdir(data_path) if os.path.isdir(data_path+directory)]
 
+        if(len(self.data_classes)==0):
+            self.data_classes = ['']
         # init lists and dictionary
         self.images = []
         self.labels = []
@@ -157,6 +158,8 @@ class Dataset(object):
       #class list
       self.data_classes = [directory for directory in os.listdir(data_path) if os.path.isdir(data_path+directory)]
 
+      if(len(self.data_classes)==0):
+        self.data_classes = ['']
       # init lists and dictionary
       self.images = []
       self.labels = []
@@ -244,6 +247,7 @@ def compute_results(query_features, gallery_features, query_urls, gallery_urls )
 def evaluate(results, query_labels, gallery_labels):
     top = {1:0, 3:0, 5:0, 10:0 , 11:0}
     top_norm = {}
+    err = {}
 
     for query, gallery in results.items():
       q_lab = query_labels[query]
@@ -256,17 +260,20 @@ def evaluate(results, query_labels, gallery_labels):
 
       if res == 11:
         top[11] += 1
+        err[query] = gallery
 
       tot = top[10] + top[11]
 
       for key, value in top.items():
         top_norm[key] = round(value/tot, 2)
     
-    return top_norm
-
+    return top_norm, err
 
 def clean_dataset(path):
     data_classes = [directory for directory in os.listdir(path) if os.path.isdir(path+directory)]
+
+    if(len(data_classes)==0):
+        data_classes = ['']
 
     for c, c_name in enumerate(data_classes):
         temp_path = os.path.join(path, c_name)
@@ -278,5 +285,33 @@ def clean_dataset(path):
            
             if ext not in ['jpeg', 'png']:
               pass
-              #os.remove(img_tmp)
+              os.remove(img_tmp)
               print(ext, img_tmp)
+
+def display_results(query_item, results, query_labels, gallery_labels, target_shape):
+    image_string = tf.io.read_file(query_item)
+    #image = tf.image.decode_jpeg(image_string, channels=1)
+    image = tf.image.decode_jpeg(image_string, channels=3)
+    image = tf.image.convert_image_dtype(image, tf.float32)
+    image = tf.image.resize(image, target_shape)
+
+
+
+    plt.xticks([])
+    plt.yticks([])
+    plt.imshow(image, cmap=plt.cm.binary)
+    plt.grid(False)
+    plt.title(next((i for i, x in enumerate(results[query_item]) if query_labels[query_item] == gallery_labels[x]), 10)+1)
+
+    plt.figure(figsize=(10,10))
+    for i, gallery_item in enumerate(results[query_item]):
+        plt.subplot(4,4,i+1)
+        image_string = tf.io.read_file(gallery_item)
+        image = tf.image.decode_jpeg(image_string, channels=3)
+        image = tf.image.convert_image_dtype(image, tf.float32)
+        image = tf.image.resize(image, target_shape)
+        plt.xticks([])
+        plt.yticks([])
+        plt.imshow(image, cmap=plt.cm.binary)
+        plt.grid(False)
+        plt.title(gallery_labels[gallery_item] )#+ round(simi[0],2)
