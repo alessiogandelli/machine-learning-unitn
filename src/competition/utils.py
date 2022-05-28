@@ -62,11 +62,7 @@ class DataGenerator(tf.keras.utils.Sequence):
 
     def __getitem__(self, index):
         batch = self.indexes[index * self.batch_size:(index + 1) * self.batch_size]
-        
-        
         (a,p,n)= self.__make_triplets(batch)
-        
-        
         return (a,p,n)
 
     def on_epoch_end(self):
