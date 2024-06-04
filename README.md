@@ -1,41 +1,37 @@
-# introduction to machine learning course project
-The project consisted in an image retriavial task, given an image query we had too sort a gallery by the most similar images.
+# Introduction to Machine Learning Course Project
 
-My first approach was only intended to understand how this kind of project should be managed, so i started watching tutorials mainly on image classification from the official keras examples and reading the tensoflow doocumentation
+This project was an image retrieval task. Given an image query, we sorted a gallery by the most similar images.
 
-https://keras.io/examples/vision/image_classification_from_scratch/ 
+My initial approach aimed to understand how to manage this type of project. I began by watching tutorials on image classification from the official Keras examples and reading the TensorFlow documentation.
 
-# The siamese network
-After the lessong concerning imege retrieval I discovered the existance of siamese network and i dediced that that will be the next step, in particualar i decided to implement a siamese netwoork with triplet loss even if in the very first moment i tried to implement a siamese with pairs (anchor-positive, anchor-negative) but since the scarcity oof the resources i decided t omoove on triples, in this case for each entry there are 3 instead of 4 images.
+https://keras.io/examples/vision/image_classification_from_scratch/
 
+# The Siamese Network
 
-All started with with this https://keras.io/examples/vision/siamese_network/ keras tutorial. 
+After the lesson on image retrieval, I learned about the Siamese network. I decided that this would be the next step. In particular, I chose to implement a Siamese network with triplet loss. Initially, I tried to implement a Siamese network with pairs (anchor-positive, anchor-negative) but due to resource limitations, I decided to use triples. In this case, for each entry, there are three images instead of four.
 
-## Dataset 
+My journey began with this Keras tutorial: https://keras.io/examples/vision/siamese_network/
 
-### adopt Dataset class 
-Now the problem is to fit this model with our data, and the classic flow_from_directory function was not useful because nw we had to handle triplets. So I decided to build a Dataset class for handling all the Data loading part. In this moment i was not caring about the structure of the model nor the different parameters.
-This model had ram problems since all the pairs were stored in lists.
+## Dataset
 
-### use tensorflow dataset 
-As i stated before using triplets was the best choice for efficency but also for clarity, in fact each element of the dataset is an entry while for the pairs we needed 2.
-Handling triplets was impossibile with just python built in data structures, so i moved to a tf.data.Dataset object which is moore efficent and optimize the resources better. ( ram problems had been a constant during all the project). 
-At this point after some empirical tests we decided that the eucledian distance was better than the cosine similarity.
+### Adopt Dataset Class
 
-### transfer learning
+Fitting this model with our data presented a challenge, as the classic flow_from_directory function was not suitable for handling triplets. I built a Dataset class to manage all the data loading. This model had RAM limitations as all pairs were stored in lists.
 
-Using a pretrained network seem a good idea, a network trained on million of images could be useful to our task to, so we started with a classic resnet50, vgg16 and efficient net, we needed a good tradeoff between effieciency and accuracy. Our main problem at this point was testing the different models, colab free gpu is unreliable and we needed a lot of time to train all of them. So we tested on our dataset the accuracy without training and they had all similar accuracies. 
+### Use TensorFlow Dataset
 
-here i'm describing the structure of the embedding which is the modular part that repeated 3 times and merged with a distance layer makes a siamese network.
+Using triplets was the most efficient and clear choice. Each element of the dataset is an entry, whereas for pairs, we needed two. Handling triplets with just Python's built-in data structures was impossible, so I moved to a tf.data.Dataset object which is more efficient and better optimizes resources. After running some tests, we found that Euclidean distance was better than cosine similarity.
 
-The first structure was a freezed resnet with 3 dense layer but since the weights of this layers are random, we risk to not have the right amount of images to correcly train it so we decided to completly remove it and just set the include_top parameter to false. But then we noticed that the includetop = False removed also the global average pooling layer so we had to add it in order to have a feature vector of a reasonable size 2048 in our case.
+### Transfer Learning
+
+We tried using a pre-trained network, such as ResNet50, VGG16, and EfficientNet. We needed a balance between efficiency and accuracy. Our main problem was testing the different models. Colab's free GPU is unreliable and we needed a lot of time to train all of them.
+
+The structure of the embedding, which is the modular part repeated three times and merged with a distance layer, forms a Siamese network. The initial structure was a frozen ResNet with three dense layers. To have a feature vector of a reasonable size (2048 in our case), we added a global average pooling layer.
 
 ## Data Generator
 
-when finally the model had a good shape, arrived the time for training, the whole dataset was to big to ofit in memory and complete an epoch, so i had to implment e custom data generator, now during the training only one batch at time was generated. Now i can train an all the 33k image dataset without problem but sadly something it's not woorking and the accuracy does not improve.
+When the model was in good shape, we moved to training. The entire dataset was too large to fit in memory and complete an epoch, so I implemented a custom data generator. Now, during training, only one batch at a time was generated. However, the accuracy did not improve.
 
+# Utils
 
-
-# utils 
-
-after repeating in many files the same functiono for the evaluation and for the data loading i decided to import these methoods from a separate python file, in fact thanks to these function , given a feature extractor and the path of the gallery and the query i'm able to compute the results without adding code 
+After repeating many functions for evaluation and data loading in multiple files, I decided to import these methods from a separate file. Now, given a feature extractor and the path of the gallery and query, I can compute the results without adding code.
